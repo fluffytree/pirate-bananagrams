@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Bananagrams</title>
+    <style>
+        /* Custom pirate banana theme colors */
+        :root {
+            --banana-yellow: #FFE135;
+            --banana-dark: #FFC30B;
+            --peel-brown: #8B4513;
+            --ocean-blue: #1e90ff;
+            --deep-ocean: #00008B;
+            --wood-brown: #723F1F;
+            --sand-color: #F4D03F;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--ocean-blue);
+            /* Create a subtle wave pattern background */
+            background-image: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(30, 144, 255, 0.1) 10px,
+                    rgba(30, 144, 255, 0.1) 20px
+                );
+            color: var(--deep-ocean);
+        }
+
+        .join-screen {
+            max-width: 400px;
+            margin: 100px auto;
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .join-screen h1 {
+            color: #ff9800;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .game-screen {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+                        0 0 0 10px rgba(139, 69, 19, 0.3);  /* Wood-like border */
+            border: 4px solid var(--wood-brown);
+        }
+
+        .letter-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 25px 0;
+            justify-content: center;
+        }
+
+        .letter {
+            display: inline-block;
+            width: 45px;
+            height: 45px;
+            line-height: 45px;
+            text-align: center;
+            background-color: var(--banana-yellow);
+            border: 2px solid var(--banana-dark);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--peel-brown);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .letter::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,0.2) 0%,
+                rgba(255,255,255,0) 50%);
+        }
+
+        .letter:hover {
+            transform: translateY(-2px) rotate(5deg);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .turn-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .turn-indicator {
+            background-color: var(--deep-ocean);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .turn-indicator::before {
+            content: '🍌';  /* Banana emoji */
+            margin-right: 8px;
+        }
+
+        .players-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .player-board {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--wood-brown);
+            transition: transform 0.2s;
+            background-image: linear-gradient(
+                45deg,
+                var(--sand-color) 25%,
+                transparent 25%,
+                transparent 75%,
+                var(--sand-color) 75%
+            );
+            background-size: 4px 4px;
+        }
+
+        .player-board:hover {
+            transform: translateY(-2px);
+        }
+
+        .player-board h3 {
+            color: var(--deep-ocean);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-shadow: 1px 1px 0 var(--banana-yellow);
+        }
+
+        .words-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .word {
+            background-color: var(--sand-color);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            border: 2px solid var(--peel-brown);
+            font-size: 1.1em;
+            font-weight: 500;
+            position: relative;
+            min-height: 24px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .word button {
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            padding: 0 12px;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            background-color: var(--deep-ocean);
+            color: white;
+            border: none;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .word button::before {
+            content: '🏴‍☠️';  /* Pirate flag emoji */
+            margin-right: 4px;
+            font-size: 0.9em;
+        }
+
+        .word:hover button {
+            opacity: 1;
+            background-color: var(--peel-brown);
+        }
+
+        button {
+            background-color: var(--deep-ocean);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--peel-brown);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        input {
+            padding: 10px 15px;
+            border: 2px solid var(--peel-brown);
+            border-radius: 8px;
+            margin-right: 10px;
+            font-size: 1em;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--deep-ocean);
+            box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
+        }
+
+        .word-form {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .game-over {
+            text-align: center;
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-over h1 {
+            color: #ff9800;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .game-over h2 {
+            color: #4a90e2;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .final-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .player-score {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+
+        .player-score:hover {
+            transform: translateY(-2px);
+        }
+
+        .player-score h3 {
+            color: #ff9800;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .steal-word-form {
+            background-color: var(--sand-color);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            text-align: center;
+            border: 2px solid var(--peel-brown);
+        }
+
+        .steal-word-form h3::before {
+            content: '🏴‍☠️';
+            margin-right: 8px;
+        }
+
+        .steal-word-form form {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .steal-word-form input {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .steal-word-form button {
+            min-width: 100px;
+        }
+
+        .steal-word-form button[type="button"] {
+            background-color: #6c757d;
+        }
+
+        .steal-word-form button[type="button"]:hover {
+            background-color: #5a6268;
+        }
+
+        h2 {
+            color: var(--deep-ocean);
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 var(--banana-yellow);
+        }
+
+        h2::before, h2::after {
+            content: '🏴‍☠️';
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/bundle.js"></script>
+</body>
+</html>
