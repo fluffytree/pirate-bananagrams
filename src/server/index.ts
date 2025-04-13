@@ -225,20 +225,29 @@ io.on('connection', (socket) => {
             // Add the new word to the stealing player
             stealingPlayer.words.push(newWord);
             
-            // Update center letters by removing the used letters
-            // First, remove all letters from the target word
+            // Start with current center letters
             const remainingLetters = [...gameState.centerLetters];
-            targetWord.split('').forEach(letter => {
-                const index = remainingLetters.indexOf(letter);
-                if (index !== -1) {
-                    remainingLetters.splice(index, 1);
+            
+            // Remove letters used in the new word from center letters first
+            newWord.split('').forEach(letter => {
+                const centerIndex = remainingLetters.indexOf(letter);
+                if (centerIndex !== -1) {
+                    remainingLetters.splice(centerIndex, 1);
                 }
             });
-            
-            // Then add back any unused letters from the target word
-            tempLetters.forEach(letter => {
-                remainingLetters.push(letter);
+
+            // For any letters in the new word that weren't in the center,
+            // remove them from the stolen word's letters
+            const stolenWordLetters = targetWord.split('');
+            newWord.split('').forEach(letter => {
+                const stolenIndex = stolenWordLetters.indexOf(letter);
+                if (stolenIndex !== -1) {
+                    stolenWordLetters.splice(stolenIndex, 1);
+                }
             });
+
+            // Add any unused letters from the stolen word back to the center
+            remainingLetters.push(...stolenWordLetters);
             
             gameState.centerLetters = remainingLetters;
             io.emit('gameState', gameState);
