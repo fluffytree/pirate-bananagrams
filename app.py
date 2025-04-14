@@ -21,7 +21,12 @@ app.image = (
 )
 
 
-@app.function(min_containers=1, max_containers=1, allow_concurrent_inputs=1000)
+@app.function(
+    min_containers=1,
+    max_containers=1,
+    allow_concurrent_inputs=1000,
+    timeout=3600,
+)
 @modal.web_server(port=3000)
 def web():
     subprocess.Popen(["node", "dist/server/index.js"], cwd="/app")
