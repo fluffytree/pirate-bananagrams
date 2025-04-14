@@ -6,7 +6,10 @@ import axios from 'axios';
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+    // https://socket.io/docs/v4/tutorial/step-6
+    connectionStateRecovery: {},
+});
 
 // Serve static files from the client directory
 app.use(express.static(path.join(__dirname, '../../public')));
