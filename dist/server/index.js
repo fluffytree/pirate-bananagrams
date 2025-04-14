@@ -31,13 +31,16 @@ const initialLetterDistribution = new Map([
     ['U', 6], ['V', 3], ['W', 3], ['X', 2], ['Y', 3],
     ['Z', 2]
 ]);
+// Calculate total letters
+const totalLetters = Array.from(initialLetterDistribution.values()).reduce((sum, count) => sum + count, 0);
 const gameState = {
     players: [],
     centerLetters: [],
     currentPlayer: null,
     letterPool: new Map(initialLetterDistribution),
     gameOver: false,
-    winner: null
+    winner: null,
+    totalLetters: totalLetters
 };
 // Dictionary API URL
 const DICTIONARY_API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
@@ -176,6 +179,21 @@ io.on('connection', (socket) => {
             socket.emit('error', 'Not a valid English word');
             return;
         }
+        // Check if the new word is just a simple modification of the original word
+        const commonSuffixes = ['s', 'es', 'ing', 'ed', 'er', 'est', 'ly', 'ness', 'ment', 'tion'];
+        const isSimpleModification = commonSuffixes.some(suffix => {
+            // Check if new word is just the original word + suffix
+            if (newWord.toLowerCase() === targetWord.toLowerCase() + suffix)
+                return true;
+            // Check if new word is just the original word with last letter replaced by suffix
+            if (newWord.toLowerCase() === targetWord.toLowerCase().slice(0, -1) + suffix)
+                return true;
+            return false;
+        });
+        if (isSimpleModification) {
+            socket.emit('error', 'Cannot just add common suffixes to the original word');
+            return;
+        }
         // Get all available letters (center letters + target word letters)
         const availableLetters = [...gameState.centerLetters, ...targetWord.split('')];
         // Check if the new word can be formed from available letters
@@ -226,6 +244,17 @@ io.on('connection', (socket) => {
         if (gameState.currentPlayer === socket.id) {
             gameState.currentPlayer = ((_a = gameState.players[0]) === null || _a === void 0 ? void 0 : _a.id) || null;
         }
+        io.emit('gameState', gameState);
+    });
+    // Handle game restart
+    socket.on('restartGame', () => {
+        // Reset game state
+        gameState.players = [];
+        gameState.centerLetters = [];
+        gameState.currentPlayer = null;
+        gameState.letterPool = new Map(initialLetterDistribution);
+        gameState.gameOver = false;
+        gameState.winner = null;
         io.emit('gameState', gameState);
     });
 });

@@ -61,11 +61,22 @@
             border: 4px solid var(--wood-brown);
         }
 
+        .game-board {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: transparent;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: none;
+            border: none;
+            margin-bottom: 15px;
+        }
+
         .letter-pool {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin: 25px 0;
+            margin: 15px 0 30px 0;
             justify-content: center;
         }
 
@@ -109,31 +120,35 @@
             flex-direction: column;
             align-items: center;
             gap: 15px;
-            margin: 25px 0;
+            margin: 30px 0 5px 0;
         }
 
-        .turn-indicator {
-            background-color: var(--deep-ocean);
-            color: white;
-            padding: 12px 25px;
-            border-radius: 8px;
+        h2 {
+            color: var(--deep-ocean);
             text-align: center;
-            font-weight: 600;
-            font-size: 1.1em;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            letter-spacing: 0.5px;
+            font-size: 2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 var(--banana-yellow);
         }
 
-        .turn-indicator::before {
-            content: '🍌';  /* Banana emoji */
-            margin-right: 8px;
+        h2::before, h2::after {
+            content: '🏴‍☠️';
+            margin: 0 10px;
+        }
+
+        .game-board h2 {
+            color: var(--deep-ocean);
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 var(--banana-yellow);
         }
 
         .players-section {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
-            margin-top: 25px;
+            margin-top: 5px;
         }
 
         .player-board {
@@ -163,6 +178,20 @@
             font-size: 1.2em;
             font-weight: 600;
             text-shadow: 1px 1px 0 var(--banana-yellow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-board h3.current-player::after {
+            content: '🍌';
+            font-size: 1.4em;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
 
         .words-list {
@@ -177,44 +206,23 @@
             border-radius: 8px;
             display: flex;
             align-items: center;
+            justify-content: center;
             border: 2px solid var(--peel-brown);
             font-size: 1.1em;
             font-weight: 500;
             position: relative;
             min-height: 24px;
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .word:hover {
+            background-color: var(--banana-dark);
+            cursor: pointer;
         }
 
         .word button {
-            opacity: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            padding: 0 12px;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
-            background-color: var(--deep-ocean);
-            color: white;
-            border: none;
-            border-top-right-radius: 6px;
-            border-bottom-right-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-
-        .word button::before {
-            content: '🏴‍☠️';  /* Pirate flag emoji */
-            margin-right: 4px;
-            font-size: 0.9em;
-        }
-
-        .word:hover button {
-            opacity: 1;
-            background-color: var(--peel-brown);
+            display: none;
         }
 
         button {
@@ -234,6 +242,23 @@
             background-color: var(--peel-brown);
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .turn-actions button {
+            font-size: 1.1em;
+            min-width: 150px;
+        }
+
+        .word-form button {
+            min-width: 120px;
+        }
+
+        .steal-word-form button[type="button"] {
+            background-color: #6c757d;
+        }
+
+        .steal-word-form button[type="button"]:hover {
+            background-color: #5a6268;
         }
 
         input {
@@ -272,6 +297,13 @@
             margin-right: 8px;
         }
 
+        .steal-word-form p {
+            color: var(--deep-ocean);
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
         .steal-word-form form {
             display: flex;
             gap: 20px;
@@ -287,14 +319,6 @@
 
         .steal-word-form button {
             min-width: 100px;
-        }
-
-        .steal-word-form button[type="button"] {
-            background-color: #6c757d;
-        }
-
-        .steal-word-form button[type="button"]:hover {
-            background-color: #5a6268;
         }
 
         .game-over {
@@ -348,17 +372,28 @@
             font-weight: 600;
         }
 
-        h2 {
-            color: var(--deep-ocean);
-            text-align: center;
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 0 var(--banana-yellow);
+        .restart-button {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: var(--deep-ocean);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        h2::before, h2::after {
-            content: '🏴‍☠️';
-            margin: 0 10px;
+        .restart-button:hover {
+            background-color: var(--peel-brown);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .restart-button::before {
+            content: '🔄';
+            margin-right: 8px;
         }
     </style>
 </head>

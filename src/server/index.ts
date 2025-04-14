@@ -21,6 +21,9 @@ const initialLetterDistribution = new Map([
     ['Z', 2]
 ]);
 
+// Calculate total letters
+const totalLetters = Array.from(initialLetterDistribution.values()).reduce((sum, count) => sum + count, 0);
+
 // Game state
 interface Player {
     id: string;
@@ -35,6 +38,7 @@ interface GameState {
     letterPool: Map<string, number>;
     gameOver: boolean;
     winner: string | null;
+    totalLetters: number;
 }
 
 const gameState: GameState = {
@@ -43,7 +47,8 @@ const gameState: GameState = {
     currentPlayer: null,
     letterPool: new Map(initialLetterDistribution),
     gameOver: false,
-    winner: null
+    winner: null,
+    totalLetters: totalLetters
 };
 
 // Dictionary API URL
@@ -206,6 +211,21 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Check if the new word is just a simple modification of the original word
+        const commonSuffixes = ['s', 'es', 'ing', 'ed', 'er', 'est', 'ly', 'ness', 'ment', 'tion'];
+        const isSimpleModification = commonSuffixes.some(suffix => {
+            // Check if new word is just the original word + suffix
+            if (newWord.toLowerCase() === targetWord.toLowerCase() + suffix) return true;
+            // Check if new word is just the original word with last letter replaced by suffix
+            if (newWord.toLowerCase() === targetWord.toLowerCase().slice(0, -1) + suffix) return true;
+            return false;
+        });
+
+        if (isSimpleModification) {
+            socket.emit('error', 'Cannot just add common suffixes to the original word');
+            return;
+        }
+
         // Get all available letters (center letters + target word letters)
         const availableLetters = [...gameState.centerLetters, ...targetWord.split('')];
         
@@ -262,6 +282,18 @@ io.on('connection', (socket) => {
         if (gameState.currentPlayer === socket.id) {
             gameState.currentPlayer = gameState.players[0]?.id || null;
         }
+        io.emit('gameState', gameState);
+    });
+
+    // Handle game restart
+    socket.on('restartGame', () => {
+        // Reset game state
+        gameState.players = [];
+        gameState.centerLetters = [];
+        gameState.currentPlayer = null;
+        gameState.letterPool = new Map(initialLetterDistribution);
+        gameState.gameOver = false;
+        gameState.winner = null;
         io.emit('gameState', gameState);
     });
 });

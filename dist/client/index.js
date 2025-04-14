@@ -38,13 +38,18 @@ function App() {
         currentPlayer: null,
         letterPool: new Map(),
         gameOver: false,
-        winner: null
+        winner: null,
+        totalLetters: 0
     });
     const [isJoined, setIsJoined] = (0, react_1.useState)(false);
     const [wordToSteal, setWordToSteal] = (0, react_1.useState)(null);
+    const [flipTimer, setFlipTimer] = (0, react_1.useState)(30);
     (0, react_1.useEffect)(() => {
         socket.on('gameState', (newState) => {
             setGameState(newState);
+            if (newState.currentPlayer !== gameState.currentPlayer) {
+                setFlipTimer(30);
+            }
         });
         socket.on('error', (errorMessage) => {
             alert(errorMessage);
@@ -53,7 +58,22 @@ function App() {
             socket.off('gameState');
             socket.off('error');
         };
-    }, []);
+    }, [gameState.currentPlayer]);
+    (0, react_1.useEffect)(() => {
+        let interval;
+        if (gameState.currentPlayer === socket.id && flipTimer > 0) {
+            interval = setInterval(() => {
+                setFlipTimer(prev => {
+                    if (prev <= 1) {
+                        socket.emit('flipLetter');
+                        return 30;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [gameState.currentPlayer, flipTimer]);
     const handleJoin = (e) => {
         e.preventDefault();
         if (playerName.trim()) {
@@ -83,6 +103,11 @@ function App() {
             input.value = '';
         }
     };
+    const handleRestartGame = () => {
+        socket.emit('restartGame');
+        setIsJoined(false);
+        setPlayerName('');
+    };
     if (!isJoined) {
         return (react_1.default.createElement("div", { className: "join-screen" },
             react_1.default.createElement("h1", null, "Pirate Bananagrams"),
@@ -103,7 +128,8 @@ function App() {
                     player.words.reduce((sum, word) => sum + word.length, 0)),
                 react_1.default.createElement("p", null,
                     "Words: ",
-                    player.words.join(', '))))))));
+                    player.words.join(', ')))))),
+            react_1.default.createElement("button", { onClick: handleRestartGame, className: "restart-button" }, "Start New Game")));
     }
     const currentPlayer = gameState.players.find(p => p.id === socket.id);
     const isMyTurn = gameState.currentPlayer === socket.id;
@@ -112,15 +138,13 @@ function App() {
             react_1.default.createElement("h2", null, "Pirate Bananagrams"),
             react_1.default.createElement("div", { className: "letter-pool" }, gameState.centerLetters.map((letter, index) => (react_1.default.createElement("span", { key: index, className: "letter" }, letter)))),
             isMyTurn && (react_1.default.createElement("div", { className: "turn-actions" },
-                react_1.default.createElement("button", { onClick: handleFlipLetter }, "Flip Letter")))),
+                react_1.default.createElement("button", { onClick: handleFlipLetter },
+                    "Flip Letter (",
+                    flipTimer,
+                    "s)")))),
         react_1.default.createElement("div", { className: "players-section" }, gameState.players.map(player => (react_1.default.createElement("div", { key: player.id, className: "player-board" },
-            react_1.default.createElement("h3", null,
-                player.name,
-                " ",
-                player.id === socket.id ? '(You)' : ''),
-            react_1.default.createElement("div", { className: "words-list" }, player.words.map((word, index) => (react_1.default.createElement("div", { key: index, className: "word" },
-                word,
-                player.id !== socket.id && (react_1.default.createElement("button", { onClick: () => handleStealWord(player.id, word) }, "Steal")))))))))),
+            react_1.default.createElement("h3", { className: gameState.currentPlayer === player.id ? 'current-player' : '' }, player.name),
+            react_1.default.createElement("div", { className: "words-list" }, player.words.map((word, index) => (react_1.default.createElement("div", { key: index, className: "word", onClick: () => handleStealWord(player.id, word) }, word)))))))),
         wordToSteal && (react_1.default.createElement("div", { className: "steal-word-form" },
             react_1.default.createElement("h3", null,
                 "Steal \"",

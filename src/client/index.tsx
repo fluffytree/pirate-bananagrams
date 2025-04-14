@@ -15,6 +15,7 @@ interface GameState {
     letterPool: Map<string, number>;
     gameOver: boolean;
     winner: string | null;
+    totalLetters: number;
 }
 
 const socket = io();
@@ -27,14 +28,19 @@ function App() {
         currentPlayer: null,
         letterPool: new Map(),
         gameOver: false,
-        winner: null
+        winner: null,
+        totalLetters: 0
     });
     const [isJoined, setIsJoined] = useState(false);
     const [wordToSteal, setWordToSteal] = useState<{playerId: string, word: string} | null>(null);
+    const [flipTimer, setFlipTimer] = useState<number>(30);
 
     useEffect(() => {
         socket.on('gameState', (newState: GameState) => {
             setGameState(newState);
+            if (newState.currentPlayer !== gameState.currentPlayer) {
+                setFlipTimer(30);
+            }
         });
 
         socket.on('error', (errorMessage: string) => {
@@ -45,7 +51,23 @@ function App() {
             socket.off('gameState');
             socket.off('error');
         };
-    }, []);
+    }, [gameState.currentPlayer]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (gameState.currentPlayer === socket.id && flipTimer > 0) {
+            interval = setInterval(() => {
+                setFlipTimer(prev => {
+                    if (prev <= 1) {
+                        socket.emit('flipLetter');
+                        return 30;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [gameState.currentPlayer, flipTimer]);
 
     const handleJoin = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -82,6 +104,12 @@ function App() {
         }
     };
 
+    const handleRestartGame = () => {
+        socket.emit('restartGame');
+        setIsJoined(false);
+        setPlayerName('');
+    };
+
     if (!isJoined) {
         return (
             <div className="join-screen">
@@ -114,6 +142,9 @@ function App() {
                         </div>
                     ))}
                 </div>
+                <button onClick={handleRestartGame} className="restart-button">
+                    Start New Game
+                </button>
             </div>
         );
     }
@@ -132,7 +163,7 @@ function App() {
                 </div>
                 {isMyTurn && (
                     <div className="turn-actions">
-                        <button onClick={handleFlipLetter}>Flip Letter</button>
+                        <button onClick={handleFlipLetter}>Flip Letter ({flipTimer}s)</button>
                     </div>
                 )}
             </div>
@@ -140,16 +171,17 @@ function App() {
             <div className="players-section">
                 {gameState.players.map(player => (
                     <div key={player.id} className="player-board">
-                        <h3>{player.name} {player.id === socket.id ? '(You)' : ''}</h3>
+                        <h3 className={gameState.currentPlayer === player.id ? 'current-player' : ''}>
+                            {player.name}
+                        </h3>
                         <div className="words-list">
                             {player.words.map((word, index) => (
-                                <div key={index} className="word">
+                                <div 
+                                    key={index} 
+                                    className="word"
+                                    onClick={() => handleStealWord(player.id, word)}
+                                >
                                     {word}
-                                    {player.id !== socket.id && (
-                                        <button onClick={() => handleStealWord(player.id, word)}>
-                                            Steal
-                                        </button>
-                                    )}
                                 </div>
                             ))}
                         </div>
