@@ -11,6 +11,7 @@ export function Word({ word, onClick }: WordProps) {
 
   useEffect(() => {
     (async () => {
+      setDefinition(null);
       const entry = await getDefinition(word);
       if (entry) {
         let content = "";
@@ -26,7 +27,7 @@ export function Word({ word, onClick }: WordProps) {
         setDefinition("No definition found");
       }
     })();
-  }, []);
+  }, [word]);
 
   return (
     <div
