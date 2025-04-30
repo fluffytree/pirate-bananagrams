@@ -1,5 +1,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { io } from "socket.io-client";
+import { Tooltip } from "react-tooltip";
+import { Word } from "./Word";
 
 interface Player {
   id: string;
@@ -189,13 +191,11 @@ export function App() {
             </h3>
             <div className="words-list">
               {player.words.map((word, index) => (
-                <div
+                <Word
                   key={index}
-                  className="word"
+                  word={word}
                   onClick={() => handleStealWord(player.id, word)}
-                >
-                  {word}
-                </div>
+                />
               ))}
             </div>
           </div>
@@ -248,6 +248,11 @@ export function App() {
           </form>
         </div>
       )}
+
+      <Tooltip
+        id="definition-toolip"
+        style={{ maxWidth: "40ch", textAlign: "center" }}
+      />
     </div>
   );
 }

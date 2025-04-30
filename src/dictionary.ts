@@ -1,7 +1,7 @@
 const DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 const DEFINITION_CACHE: Map<string, DictionaryEntry> = new Map();
 
-export type DictionaryEntry = {
+export interface DictionaryEntry {
   word: string;
   phonetic: string;
   phonetics: {
@@ -23,7 +23,7 @@ export type DictionaryEntry = {
     url: string;
   };
   sourceUrls: string[];
-};
+}
 
 export async function getDefinition(
   word: string,
