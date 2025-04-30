@@ -4,3 +4,4 @@ dist
 public/bundle.js
 __pycache__/
 .DS_Store
+.vscode/

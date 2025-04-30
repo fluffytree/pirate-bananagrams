@@ -54,9 +54,9 @@ function App() {
     }, [gameState.currentPlayer]);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
+        let interval = 0;
         if (gameState.currentPlayer === socket.id && flipTimer > 0) {
-            interval = setInterval(() => {
+            interval = window.setInterval(() => {
                 setFlipTimer(prev => {
                     if (prev <= 1) {
                         socket.emit('flipLetter');
