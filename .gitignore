@@ -1,7 +1,7 @@
 node_modules
 npm-debug.log
 dist
-public/bundle.js
+dist-server
 __pycache__/
 .DS_Store
 .vscode/
