@@ -49,7 +49,7 @@ const initialLetterDistribution = new Map([
 // Calculate total letters
 const totalLetters = Array.from(initialLetterDistribution.values()).reduce(
   (sum, count) => sum + count,
-  0
+  0,
 );
 
 // Game state
@@ -97,7 +97,7 @@ function getRandomLetter(): string | null {
   // Get total remaining letters
   const totalRemaining = Array.from(gameState.letterPool.values()).reduce(
     (sum, count) => sum + count,
-    0
+    0,
   );
 
   if (totalRemaining === 0) {
@@ -127,7 +127,7 @@ function checkGameOver() {
   // Check if all letters are used
   const totalRemaining = Array.from(gameState.letterPool.values()).reduce(
     (sum, count) => sum + count,
-    0
+    0,
   );
 
   if (totalRemaining === 0) {
@@ -142,7 +142,7 @@ function checkGameOver() {
 
     // Find player with highest score
     const winner = scores.reduce((prev, current) =>
-      prev.score > current.score ? prev : current
+      prev.score > current.score ? prev : current,
     );
 
     gameState.winner = winner.name;
@@ -184,7 +184,7 @@ io.on("connection", (socket) => {
 
     // Move to next player
     const currentIndex = gameState.players.findIndex(
-      (p) => p.id === gameState.currentPlayer
+      (p) => p.id === gameState.currentPlayer,
     );
     gameState.currentPlayer =
       gameState.players[(currentIndex + 1) % gameState.players.length].id;
@@ -235,7 +235,7 @@ io.on("connection", (socket) => {
 
       const stealingPlayer = gameState.players.find((p) => p.id === socket.id);
       const targetPlayer = gameState.players.find(
-        (p) => p.id === targetPlayerId
+        (p) => p.id === targetPlayerId,
       );
 
       if (!stealingPlayer || !targetPlayer) return;
@@ -279,7 +279,7 @@ io.on("connection", (socket) => {
       if (isSimpleModification) {
         socket.emit(
           "error",
-          "Cannot just add common suffixes to the original word"
+          "Cannot just add common suffixes to the original word",
         );
         return;
       }
@@ -335,7 +335,7 @@ io.on("connection", (socket) => {
       } else {
         socket.emit("error", "Cannot form word from available letters");
       }
-    }
+    },
   );
 
   socket.on("disconnect", () => {
