@@ -118,7 +118,7 @@ export function App() {
     return (
       <div className="join-screen">
         <h1>Pirate Bananagrams</h1>
-        <form onSubmit={handleJoin}>
+        <form className="input-group" onSubmit={handleJoin}>
           <input
             type="text"
             value={playerName}
@@ -126,7 +126,9 @@ export function App() {
             placeholder="Enter your name"
             required
           />
-          <button type="submit">Join Game</button>
+          <button type="submit">
+            Join<span className="mobile-hidden"> Game</span>
+          </button>
         </form>
       </div>
     );
@@ -209,16 +211,23 @@ export function App() {
             Enter a new word that can be formed using the letters from "
             {wordToSteal.word}" plus letters from the center:
           </p>
-          <form onSubmit={handleSubmitSteal}>
+          <form className="input-group" onSubmit={handleSubmitSteal}>
             <input
               type="text"
               name="stealWord"
               placeholder="Enter new word"
               minLength={wordToSteal.word.length + 1}
               required
+              className="uppercase"
+              autoComplete="off"
+              autoFocus
             />
             <button type="submit">Submit</button>
-            <button type="button" onClick={() => setWordToSteal(null)}>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setWordToSteal(null)}
+            >
               Cancel
             </button>
           </form>
@@ -228,6 +237,7 @@ export function App() {
       {currentPlayer && !wordToSteal && (
         <div className="word-form">
           <form
+            className="input-group"
             onSubmit={(e: FormEvent<HTMLFormElement>) => {
               e.preventDefault();
               const form = e.currentTarget;
@@ -243,8 +253,12 @@ export function App() {
               name="word"
               placeholder="Enter a word to claim"
               minLength={3}
+              className="uppercase"
+              autoComplete="off"
             />
-            <button type="submit">Claim Word</button>
+            <button type="submit">
+              Claim<span className="mobile-hidden"> Word</span>
+            </button>
           </form>
         </div>
       )}

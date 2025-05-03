@@ -13,16 +13,25 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 20px;
+  @media (max-width: 640px) {
+    padding: 16px;
+  }
   background-color: var(--ocean-blue);
   /* Create a subtle wave pattern background */
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 10px,
-    rgba(30, 144, 255, 0.1) 10px,
-    rgba(30, 144, 255, 0.1) 20px
+    rgba(23, 122, 255, 0.1) 10px,
+    rgba(23, 122, 255, 0.1) 20px
   );
   color: var(--deep-ocean);
+}
+
+.mobile-hidden {
+  @media (max-width: 640px) {
+    display: none;
+  }
 }
 
 .join-screen {
@@ -31,6 +40,9 @@ body {
   text-align: center;
   background-color: #fff;
   padding: 40px;
+  @media (max-width: 640px) {
+    padding-inline: 20px;
+  }
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -47,11 +59,15 @@ body {
   margin: 0 auto;
   background-color: rgba(255, 255, 255, 0.9);
   padding: 30px;
+  @media (max-width: 640px) {
+    padding-inline: 16px;
+  }
   border-radius: 12px;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.2),
-    0 0 0 10px rgba(139, 69, 19, 0.3); /* Wood-like border */
+    0 0 0 8px rgba(139, 69, 19, 0.3); /* Wood-like border */
   border: 4px solid var(--wood-brown);
+  container-type: inline-size;
 }
 
 .game-board {
@@ -59,6 +75,9 @@ body {
   margin: 0 auto;
   background-color: transparent;
   padding: 30px;
+  @media (max-width: 640px) {
+    padding: 0 0 15px 0;
+  }
   border-radius: 12px;
   box-shadow: none;
   border: none;
@@ -69,7 +88,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 15px 0 30px 0;
+  margin-block: 20px;
   justify-content: center;
 }
 
@@ -115,34 +134,49 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 15px;
-  margin: 30px 0 5px 0;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
 }
 
 h2 {
   color: var(--deep-ocean);
   text-align: center;
   font-size: 2em;
-  margin-bottom: 15px;
   text-shadow: 2px 2px 0 var(--banana-yellow);
 }
 
-h2::before,
+h2::before {
+  content: "🏴‍☠️";
+  margin-right: 10px;
+}
 h2::after {
   content: "🏴‍☠️";
-  margin: 0 10px;
+  margin-left: 10px;
 }
 
 .game-board h2 {
   color: var(--deep-ocean);
   text-align: center;
   font-size: 2em;
-  margin-bottom: 20px;
+  @media (max-width: 640px) {
+    font-size: 1.75em;
+  }
+  margin-bottom: 24px;
+  margin-inline: 16px;
   text-shadow: 2px 2px 0 var(--banana-yellow);
 }
 
 .players-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  @container (max-width: 299px) {
+    /* .game-screen */
+    grid-template-columns: 100%; /* Fall back to full-width columns on narrow screens. */
+  }
   gap: 25px;
   margin-top: 5px;
 }
@@ -170,6 +204,7 @@ h2::after {
 
 .player-board h3 {
   color: var(--deep-ocean);
+  margin-top: 0;
   margin-bottom: 15px;
   font-size: 1.2em;
   font-weight: 600;
@@ -233,6 +268,7 @@ button {
   padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
+  white-space: nowrap;
   font-size: 1em;
   font-weight: 600;
   transition: all 0.2s;
@@ -245,28 +281,38 @@ button:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.input-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+
+  & > input {
+    flex: 1;
+    min-width: 16ch;
+    max-width: 28ch;
+  }
+}
+
 .turn-actions button {
   font-size: 1.1em;
   min-width: 150px;
 }
 
-.word-form button {
-  min-width: 120px;
-}
-
-.steal-word-form button[type="button"] {
+.secondary-button {
   background-color: #6c757d;
 }
 
-.steal-word-form button[type="button"]:hover {
+.secondary-button:hover {
   background-color: #5a6268;
 }
 
 input {
+  min-width: 0;
   padding: 10px 15px;
   border: 2px solid var(--peel-brown);
   border-radius: 8px;
-  margin-right: 10px;
   font-size: 1em;
   background-color: white;
   transition: all 0.2s;
@@ -278,14 +324,21 @@ input:focus {
   box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.2);
 }
 
+input.uppercase {
+  text-transform: uppercase;
+}
+
+input.uppercase::placeholder {
+  text-transform: none;
+}
+
 .word-form {
   margin-top: 25px;
-  text-align: center;
 }
 
 .steal-word-form {
   background-color: var(--sand-color);
-  padding: 25px;
+  padding: 25px 16px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   margin-top: 20px;
@@ -303,23 +356,6 @@ input:focus {
   font-size: 1.1em;
   margin-bottom: 15px;
   font-weight: 500;
-}
-
-.steal-word-form form {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 15px;
-}
-
-.steal-word-form input {
-  flex: 1;
-  max-width: 300px;
-}
-
-.steal-word-form button {
-  min-width: 100px;
 }
 
 .game-over {
