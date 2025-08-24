@@ -57,6 +57,7 @@ interface Player {
   id: string;
   name: string;
   words: string[];
+  disconnectedAt?: number;
 }
 
 interface GameState {
@@ -149,20 +150,48 @@ function checkGameOver() {
   }
 }
 
+// Function to handle turn transition if a player was removed or disconnected
+function disconnectPlayer(playerId: string, remove = false) {
+  if (remove) {
+    gameState.players = gameState.players.filter((p) => p.id !== playerId);
+  } else {
+    const player = gameState.players.find((p) => p.id === playerId);
+    if (player) {
+      player.disconnectedAt = Date.now();
+    }
+  }
+  if (gameState.currentPlayer === playerId) {
+    const connectedPlayers = gameState.players.filter((p) => !p.disconnectedAt);
+    gameState.currentPlayer =
+      connectedPlayers.length > 0 ? connectedPlayers[0].id : null;
+  }
+}
+
 // Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Handle player joining
   socket.on("joinGame", (playerName: string) => {
-    const newPlayer: Player = {
-      id: socket.id,
-      name: playerName,
-      words: [],
-    };
-    gameState.players.push(newPlayer);
+    // Check if player with this name was recently disconnected
+    const existingPlayer = gameState.players.find((p) => p.name === playerName);
 
-    if (gameState.players.length === 1) {
+    if (existingPlayer) {
+      // Reconnect existing player
+      existingPlayer.id = socket.id;
+      delete existingPlayer.disconnectedAt;
+    } else {
+      // Create new player
+      const newPlayer: Player = {
+        id: socket.id,
+        name: playerName,
+        words: [],
+      };
+      gameState.players.push(newPlayer);
+    }
+
+    // Give them the turn if no one else currently has it.
+    if (gameState.currentPlayer === null) {
       gameState.currentPlayer = socket.id;
     }
 
@@ -182,12 +211,14 @@ io.on("connection", (socket) => {
 
     gameState.centerLetters.push(newLetter);
 
-    // Move to next player
-    const currentIndex = gameState.players.findIndex(
+    // Move to next connected player
+    const connectedPlayers = gameState.players.filter((p) => !p.disconnectedAt);
+    const currentIndex = connectedPlayers.findIndex(
       (p) => p.id === gameState.currentPlayer,
     );
+
     gameState.currentPlayer =
-      gameState.players[(currentIndex + 1) % gameState.players.length].id;
+      connectedPlayers[(currentIndex + 1) % connectedPlayers.length]?.id;
 
     io.emit("gameState", gameState);
   });
@@ -340,10 +371,30 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
-    gameState.players = gameState.players.filter((p) => p.id !== socket.id);
-    if (gameState.currentPlayer === socket.id) {
-      gameState.currentPlayer = gameState.players[0]?.id || null;
+
+    const player = gameState.players.find((p) => p.id === socket.id);
+    if (player) {
+      // If player has no words, remove them completely
+      disconnectPlayer(socket.id, player.words.length === 0);
     }
+
+    io.emit("gameState", gameState);
+  });
+
+  // Handle kicking a player
+  socket.on("kickPlayer", (playerIdToKick: string) => {
+    const playerToKick = gameState.players.find((p) => p.id === playerIdToKick);
+    if (!playerToKick) return;
+
+    disconnectPlayer(playerIdToKick, true);
+
+    // Disconnect the kicked player's socket if they're still connected
+    const kickedSocket = io.sockets.sockets.get(playerIdToKick);
+    if (kickedSocket) {
+      kickedSocket.emit("kicked", "You have been kicked from the game");
+      kickedSocket.disconnect();
+    }
+
     io.emit("gameState", gameState);
   });
 

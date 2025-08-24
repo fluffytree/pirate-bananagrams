@@ -2,11 +2,13 @@ import { useState, useEffect, FormEvent } from "react";
 import { io } from "socket.io-client";
 import { Tooltip } from "react-tooltip";
 import { Word } from "./Word";
+import { ConfirmModal } from "./ConfirmModal";
 
 interface Player {
   id: string;
   name: string;
   words: string[];
+  disconnectedAt?: number;
 }
 
 interface GameState {
@@ -38,6 +40,10 @@ export function App() {
     word: string;
   } | null>(null);
   const [flipTimer, setFlipTimer] = useState<number>(30);
+  const [kickConfirm, setKickConfirm] = useState<{
+    playerId: string;
+    playerName: string;
+  } | null>(null);
 
   useEffect(() => {
     socket.on("gameState", (newState: GameState) => {
@@ -51,9 +57,16 @@ export function App() {
       alert(errorMessage);
     });
 
+    socket.on("kicked", (message: string) => {
+      alert(message);
+      // Refresh the page to reset state.
+      window.location.reload();
+    });
+
     return () => {
       socket.off("gameState");
       socket.off("error");
+      socket.off("kicked");
     };
   }, [gameState.currentPlayer]);
 
@@ -112,6 +125,21 @@ export function App() {
     socket.emit("restartGame");
     setIsJoined(false);
     setPlayerName("");
+  };
+
+  const handleKickPlayer = (playerId: string, playerName: string) => {
+    setKickConfirm({ playerId, playerName });
+  };
+
+  const confirmKick = () => {
+    if (kickConfirm) {
+      socket.emit("kickPlayer", kickConfirm.playerId);
+      setKickConfirm(null);
+    }
+  };
+
+  const cancelKick = () => {
+    setKickConfirm(null);
   };
 
   if (!isJoined) {
@@ -184,13 +212,30 @@ export function App() {
       <div className="players-section">
         {gameState.players.map((player) => (
           <div key={player.id} className="player-board">
-            <h3
-              className={
-                gameState.currentPlayer === player.id ? "current-player" : ""
-              }
-            >
-              {player.name}
-            </h3>
+            <div className="player-header">
+              <h3
+                className={
+                  gameState.currentPlayer === player.id ? "current-player" : ""
+                }
+              >
+                {player.name}
+                {player.disconnectedAt && (
+                  <span className="disconnected-indicator">
+                    {" "}
+                    (disconnected)
+                  </span>
+                )}
+              </h3>
+              {player.id !== socket.id && (
+                <button
+                  className="red-button smol-button"
+                  onClick={() => handleKickPlayer(player.id, player.name)}
+                  title={`Kick ${player.name}`}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <div className="words-list">
               {player.words.map((word, index) => (
                 <Word
@@ -266,6 +311,15 @@ export function App() {
       <Tooltip
         id="definition-toolip"
         style={{ maxWidth: "40ch", textAlign: "center" }}
+      />
+
+      <ConfirmModal
+        isOpen={!!kickConfirm}
+        title="Kick Player"
+        message="Are you sure you want to kick this player from the game?"
+        playerName={kickConfirm?.playerName || ""}
+        onConfirm={confirmKick}
+        onCancel={cancelKick}
       />
     </div>
   );
